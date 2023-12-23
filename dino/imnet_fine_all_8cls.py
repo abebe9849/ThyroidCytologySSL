@@ -101,18 +101,7 @@ def eval_linear(args):
     # load weights to evaluate
     model = timm.create_model("vit_small_patch16_224_in21k",pretrained=True,num_classes=8)
     model.cuda()
-    """
-    model.head = nn.Linear(model.embed_dim, 8)
-    model.head.cuda()
-    for _, p in model.named_parameters():
-        p.requires_grad = False
-    for _, p in model.head.named_parameters():
-        p.requires_grad = True
 
-    for n, p in model.blocks.named_parameters():
-        if int(n.split(".")[0])>=(12-args.freeze):
-            p.requires_grad = True
-    """
     model.train()
     print(model)
     print(f"Model {args.arch} built.")
@@ -131,9 +120,7 @@ def eval_linear(args):
     df = pd.read_csv("/home/abe/kuma-ssl/data/folds8.csv")
     tra_df = df[df["fold"]!=FOLD].reset_index(drop=True)
 
-    tra_df = tra_df.sample(frac=1,random_state=int(args.seed)).reset_index(drop=True)
     val_df = df[df["fold"]==FOLD].reset_index(drop=True)
-    #dataset_val = datasets.ImageFolder(os.path.join(args.data_path, "val"), transform=val_transform)
     dataset_val = TrainDataset(val_df, transform=val_transform)
     val_loader = torch.utils.data.DataLoader(
         dataset_val,
@@ -165,7 +152,6 @@ def eval_linear(args):
         pth_transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
     dataset_train = TrainDataset(tra_df, transform=train_transform)
-    #dataset_train = datasets.ImageFolder(os.path.join(args.data_path, "train"), transform=train_transform)
     #sampler = torch.utils.data.distributed.DistributedSampler(dataset_train)
     train_loader = torch.utils.data.DataLoader(
         dataset_train,
