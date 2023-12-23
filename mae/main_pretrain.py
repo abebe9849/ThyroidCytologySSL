@@ -107,9 +107,9 @@ def get_args_parser():
 import pandas as pd
 import timm,glob
 aimed_df = pd.read_csv("/home/abe/kuma-ssl/data/all_df.csv")
+##all images
 from PIL import Image
 
-### atmaのdataset=========
 class TrainDataset(torch.utils.data.Dataset):
     def __init__(self, df,train=True,transform=None):
         self.df = df
@@ -126,9 +126,7 @@ class TrainDataset(torch.utils.data.Dataset):
         
         image = self.transform(image)
         
-
-        label_ = self.df['label'].values[idx]
-        label = torch.tensor(label_).float()
+        label = torch.tensor(0).float()
         return image,label
 def main(args):
     misc.init_distributed_mode(args)
