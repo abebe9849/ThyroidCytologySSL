@@ -70,7 +70,7 @@ dino/visualize_attention.py --pretrained_weights [dino_vits_chechpoint.pth] --im
 
 10% or 1% labels
 ```
-python dino/eval_line_few_8cls.py --rate [10 or 1]
+python dino/eval_line_10_8cls.py --rate [10 or 1]
 ```
 
 
