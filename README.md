@@ -2,7 +2,7 @@
 
 
 ## Requirements
-- **Operating system**: Testing has been performed on Ubuntu 20.04, 22.04, and CentOS 8 Stream.
+- **Operating system**: Testing has been performed on Ubuntu 20.04.
 - Python == 3.9
 - PyTorch == 1.12.0
 
@@ -49,12 +49,13 @@ cd mae
 python -m torch.distributed.launch --nproc_per_node=2 main_pretrain.py --arch vit_small --batch_size_per_gpu 256
 ```
 
-## get embedding from pretrained ViT
+## get embedding from pretrained ViT→TSNE
 
 ### ImageNet pretrained
-
+```
+dino/get_embed_imnet.py
+```
 ### DINO pretrained
-
 ```
 dino/get_embed.py --pretrained_weights [dino_vits_chechpoint.pth]
 ```
