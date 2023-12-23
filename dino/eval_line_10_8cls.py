@@ -111,7 +111,7 @@ def eval_linear(args):
     df = pd.read_csv("/home/abe/kuma-ssl/data/folds8.csv")
     tra_df = df[df["fold"]!=FOLD].reset_index(drop=True)
     ###
-    tra_df = tra_df.sample(frac=100/args.rate,random_state=int(args.seed)).reset_index(drop=True)
+    tra_df = tra_df.sample(frac=args.rate/100,random_state=int(args.seed)).reset_index(drop=True)
 
     ###
     val_df = df[df["fold"]==FOLD].reset_index(drop=True)
