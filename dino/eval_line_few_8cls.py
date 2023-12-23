@@ -398,7 +398,7 @@ if __name__ == '__main__':
 
 
 
-    for seed in [1000,2000,3000,1002,2022]:
+    for seed in [0,1,2,3,4]:
         args.seed = seed
     
         
