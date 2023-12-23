@@ -382,6 +382,8 @@ if __name__ == '__main__':
     parser.add_argument("--seed", default=1000, type=int)
     parser.add_argument("--fold", default=0, type=int)
     parser.add_argument("--freeze", default=9, type=int)
+    parser.add_argument("--rate", default=1, type=int)
+
     parser.add_argument('--num_workers', default=10, type=int, help='Number of data loading workers per GPU.')
     parser.add_argument('--val_freq', default=1, type=int, help="Epoch frequency for validation.")
     parser.add_argument('--output_dir', default="/home/abe/kuma-ssl/dino/imnetViTS/10per", help='Path to save logs and checkpoints')
