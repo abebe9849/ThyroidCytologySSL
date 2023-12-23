@@ -101,18 +101,7 @@ def eval_linear(args):
     # load weights to evaluate
     model = timm.create_model("vit_small_patch16_224_in21k",pretrained=True,num_classes=8)
     model.cuda()
-    """
-    model.head = nn.Linear(model.embed_dim, 8)
-    model.head.cuda()
-    for _, p in model.named_parameters():
-        p.requires_grad = False
-    for _, p in model.head.named_parameters():
-        p.requires_grad = True
 
-    for n, p in model.blocks.named_parameters():
-        if int(n.split(".")[0])>=(12-args.freeze):
-            p.requires_grad = True
-    """
     model.train()
     print(model)
     print(f"Model {args.arch} built.")
@@ -131,7 +120,7 @@ def eval_linear(args):
     df = pd.read_csv("/home/abe/kuma-ssl/data/folds8.csv")
     tra_df = df[df["fold"]!=FOLD].reset_index(drop=True)
 
-    tra_df = tra_df.sample(frac=0.1,random_state=int(args.seed)).reset_index(drop=True)
+    tra_df = tra_df.sample(frac=args.rate/100,random_state=int(args.seed)).reset_index(drop=True)
     val_df = df[df["fold"]==FOLD].reset_index(drop=True)
     #dataset_val = datasets.ImageFolder(os.path.join(args.data_path, "val"), transform=val_transform)
     dataset_val = TrainDataset(val_df, transform=val_transform)
@@ -399,8 +388,59 @@ if __name__ == '__main__':
     parser.add_argument('--num_labels', default=8, type=int, help='Number of labels for linear classifier')
     parser.add_argument('--evaluate', dest='evaluate', action='store_true', help='evaluate model on validation set')
     args = parser.parse_args()
-    args.output_dir = os.path.join(args.output_dir,str(args.seed),str(args.fold))
-    if args.output_dir:
-        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
-    eval_linear(args)
+
+    ROOT_ = args.output_dir
+
+
+
+    for seed in [0,1,2,3,4]:
+        args.seed = seed
+    
+        
+        args.output_dir = os.path.join(ROOT_,str(args.seed))
+        ROOT = args.output_dir+"/"
+    
+        args.fold = 0
+        args.output_dir = ROOT+str(args.fold)    
+        os.makedirs(args.output_dir,exist_ok=True)
+        eval_linear(args)
+        args.fold = 1
+        args.output_dir =ROOT+str(args.fold)
+        os.makedirs(args.output_dir,exist_ok=True)
+        eval_linear(args)
+        args.fold = 2
+        args.output_dir = ROOT+str(args.fold)
+        os.makedirs(args.output_dir,exist_ok=True)
+        eval_linear(args)
+        args.fold = 3
+        args.output_dir =ROOT+str(args.fold)
+        os.makedirs(args.output_dir,exist_ok=True)
+        eval_linear(args)
+        args.fold = 4
+        args.output_dir =ROOT+str(args.fold)
+        os.makedirs(args.output_dir,exist_ok=True)
+        eval_linear(args)
+        
+    
+        cols = [f"pred_{i}" for i in range(args.num_labels)]
+        sub_pred_ = []
+        oof_ = []
+        for fold in [0,1,2,3,4]:
+        
+            sub = pd.read_csv(os.path.join(ROOT+str(fold),f"sub_fold{fold}_dino.csv"))
+            print(sub[cols].to_numpy().shape)
+            sub_pred_.append(sub[cols].to_numpy())
+            oof_.append(pd.read_csv(os.path.join(ROOT+str(fold),f"oof_fold{fold}_dino.csv")))
+        sub_pred_ = np.mean(np.stack(sub_pred_),axis=0)
+        oof_ = pd.concat(oof_,axis=0)
+        oof_.to_csv(f"{ROOT}oof.csv",index=False)
+        
+        for i in range(args.num_labels):
+            col = f"pred_mean_{i}"
+            sub[col]=sub_pred_[:,i]
+        sub.to_csv(f"{ROOT}sub.csv",index=False)
+
+
+
+
