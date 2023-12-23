@@ -111,8 +111,7 @@ def eval_linear(args):
     df = pd.read_csv("/home/abe/kuma-ssl/data/folds8.csv")
     tra_df = df[df["fold"]!=FOLD].reset_index(drop=True)
     ###
-    #tra_df = tra_df.sample(frac=0.1,random_state=2022).reset_index(drop=True)
-    tra_df = tra_df.sample(frac=0.1,random_state=int(args.seed)).reset_index(drop=True)
+    tra_df = tra_df.sample(frac=100/args.rate,random_state=int(args.seed)).reset_index(drop=True)
 
     ###
     val_df = df[df["fold"]==FOLD].reset_index(drop=True)
@@ -386,6 +385,7 @@ if __name__ == '__main__':
     parser.add_argument("--local_rank", default=0, type=int, help="Please ignore and do not set this argument.")
 
     parser.add_argument("--fold", default=1, type=int)
+    parser.add_argument("--rate", default=10, type=int)
     parser.add_argument("--seed", default=1000, type=int)
     parser.add_argument('--num_workers', default=10, type=int, help='Number of data loading workers per GPU.')
     parser.add_argument('--val_freq', default=1, type=int, help="Epoch frequency for validation.")
