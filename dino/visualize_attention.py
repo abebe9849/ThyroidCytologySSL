@@ -19,7 +19,7 @@ import random
 import colorsys
 import requests
 from io import BytesIO
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import skimage.io
 from skimage.measure import find_contours
@@ -101,11 +101,11 @@ if __name__ == '__main__':
     parser.add_argument('--arch', default='vit_small', type=str,
         choices=['vit_tiny', 'vit_small', 'vit_base'], help='Architecture (support only ViT atm).')
     parser.add_argument('--patch_size', default=16, type=int, help='Patch resolution of the model.')
-    parser.add_argument('--pretrained_weights', default='/home/abe/kuma-ssl/dino/exp002/checkpoint0280.pth', type=str,
+    parser.add_argument('--pretrained_weights', default='', type=str,
         help="Path to pretrained weights to load.")
     parser.add_argument("--checkpoint_key", default="teacher", type=str,
         help='Key to use in the checkpoint (example: "teacher")')
-    parser.add_argument("--image_path", default="/home/abe/kuma-ssl/data/all_pngs/181235-11-POC_Y1_X3_p_suzuki.png", type=str, help="Path of the image to load.")
+    parser.add_argument("--image_path", default="image.png", type=str, help="Path of the image to load.")
     parser.add_argument("--image_size", default=(480, 480), type=int, nargs="+", help="Resize image.")
     parser.add_argument('--output_dir', default='/home/abe/kuma-ssl/dino/attention', help='Path where to save visualizations.')
     parser.add_argument("--threshold", type=float, default=None, help="""We visualize masks
