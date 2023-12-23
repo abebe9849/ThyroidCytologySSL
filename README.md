@@ -68,7 +68,11 @@ dino/visualize_attention.py --pretrained_weights [dino_vits_chechpoint.pth] --im
 
 ## evaluate dino-ViT-S
 
-10% or 1% labels
+100% labels
+```
+dino/eval_line_all_8cls.py
+```
+10% or 1% labels 5seed
 ```
 python dino/eval_line_10_8cls.py --rate [10 or 1]
 ```
