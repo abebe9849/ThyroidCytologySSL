@@ -53,16 +53,27 @@ dino/get_embed.py --pretrained_weights [dino_vits_chechpoint.pth]
 dino/visualize_attention.py --pretrained_weights [dino_vits_chechpoint.pth] --image_path [image path]
 ```
 
-## evaluate dino-ViT-S
+## evaluate ViT-S
 
+### DINO-ViT-S
 100% labels
 ```
-dino/eval_line_all_8cls.py
+python dino/eval_line_all_8cls.py
 ```
 10% or 1% labels 5seed
 ```
-python dino/eval_line_10_8cls.py --rate [10 or 1]
+python dino/eval_line_few_8cls.py --rate [10 or 1]
 ```
+### ImageNet--ViT-S
+100% labels
+```
+python dino/imnet_fine_10_8cls.py
+```
+10% or 1% labels 5seed
+```
+python dino/imnet_fine_few_8cls.py --rate [10 or 1]
+```
+
 
 
 
