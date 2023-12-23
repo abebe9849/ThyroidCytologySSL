@@ -20,7 +20,7 @@ And then activate the new environment:
 conda activate env
 ```
 ## Pretrained Models
-The checkpoint and loss logs for the DINO pre-trained model are located (here)[https://www.kaggle.com/datasets/abebe9849/kumadinoe300s ]. 
+The checkpoint and loss logs for the DINO pre-trained model are located [here](https://www.kaggle.com/datasets/abebe9849/kumadinoe300s). 
 ## Training DINO
 
 １．Prepare a CSV with a column named 'file_path' that includes the absolute paths of all images, and modify the following section accordingly
