@@ -60,7 +60,12 @@ dino/get_embed_imnet.py
 dino/get_embed.py --pretrained_weights [dino_vits_chechpoint.pth]
 ```
 
-### 
+## visualize attention map
+
+```
+dino/visualize_attention.py --pretrained_weights [dino_vits_chechpoint.pth] --image_path [image path]
+```
+
 
 
 
