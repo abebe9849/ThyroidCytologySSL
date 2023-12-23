@@ -132,22 +132,11 @@ def get_args_parser():
 import pandas as pd
 import timm,glob
 aimed_df = pd.read_csv("/home/abe/kuma-ssl/data/all_df.csv")
-
-#add_df = pd.read_csv("/home/abe/kuma-ssl/gan_data/gan1.csv")
-## exp007 ##
-#fake = pd.DataFrame()
-#fake["file_path"]=glob.glob("/home/abe/kuma-ssl/lwgan_330_data/imgs/kaggle/working/results/default-generated-330/*jpg")
-#fake['label']=1
-#add_df = fake
-## exp007 ##
-
-
+#all_images paths
 print(aimed_df.shape)
 
 
 
-#aimed_df = pd.concat([aimed_df,add_df]).reset_index(drop=True)
-### atmaのdataset=========
 class TrainDataset(torch.utils.data.Dataset):
     def __init__(self, df,train=True,transform=None):
         self.df = df
@@ -163,8 +152,7 @@ class TrainDataset(torch.utils.data.Dataset):
 
         image = self.transform(image)
 
-        label_ = self.df['label'].values[idx]
-        label = torch.tensor(label_).float()
+        label = torch.tensor(0).float()
         return image,label
 
 
