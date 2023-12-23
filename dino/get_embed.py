@@ -27,6 +27,9 @@ from torchvision import models as torchvision_models
 
 import utils
 import vision_transformer as vits
+from sklearn.manifold import TSNE
+import numpy as np
+import pandas as pd
 
 from PIL import Image
 #from PIL import ImageFile
@@ -97,22 +100,10 @@ def eval_linear(args):
         pth_transforms.ToTensor(),
         pth_transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
-    FOLD = args.fold
-    
-    df = pd.read_csv("/home/abe/kuma-ssl/data/folds.csv")
-    tra_df = df[df["fold"]!=FOLD].reset_index(drop=True)
-    val_df = df
-    #dataset_val = datasets.ImageFolder(os.path.join(args.data_path, "val"), transform=val_transform)
-    dataset_val = TrainDataset(df, transform=val_transform)
-    val_loader = torch.utils.data.DataLoader(
-        dataset_val,
-        batch_size=args.batch_size_per_gpu,
-        num_workers=args.num_workers,
-        pin_memory=True,
-    )
-    fake = pd.DataFrame()
+
 
     test_df = pd.read_csv("/home/abe/kuma-ssl/data/test.csv")
+    ##csv:images for analyzing embedding
 
 
     dataset_tesst = TrainDataset(test_df, transform=val_transform)
@@ -123,158 +114,11 @@ def eval_linear(args):
         pin_memory=True,
     )
 
-    if args.evaluate:
-        utils.load_pretrained_linear_weights(linear_classifier, args.arch, args.patch_size)
-        test_stats = validate_network(val_loader, model, linear_classifier, args.n_last_blocks, args.avgpool_patchtokens)
-        print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
-        return
-
-    train_transform = pth_transforms.Compose([
-        pth_transforms.RandomResizedCrop(224),
-        pth_transforms.RandomHorizontalFlip(),
-        pth_transforms.ToTensor(),
-        pth_transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-    ])
-    dataset_train = TrainDataset(tra_df, transform=train_transform)
-    #dataset_train = datasets.ImageFolder(os.path.join(args.data_path, "train"), transform=train_transform)
-    sampler = torch.utils.data.distributed.DistributedSampler(dataset_train)
-    train_loader = torch.utils.data.DataLoader(
-        dataset_train,
-        sampler=sampler,
-        batch_size=args.batch_size_per_gpu,
-        num_workers=args.num_workers,
-        pin_memory=True,
-        
-    )
-    print(f"Data loaded with {len(dataset_train)} train and {len(dataset_val)} val imgs.")
-
-    # set optimizer
-    optimizer = torch.optim.SGD(
-        linear_classifier.parameters(),
-        args.lr * (args.batch_size_per_gpu * utils.get_world_size()) / 256., # linear scaling rule
-        momentum=0.9,
-        weight_decay=0, # we do not apply weight decay
-    )
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0)
-    """
-    # Optionally resume from a checkpoint
-    to_restore = {"epoch": 0, "best_acc": 0.}
-    utils.restart_from_checkpoint(
-        os.path.join(args.output_dir, "checkpoint.pth.tar"),
-        run_variables=to_restore,
-        state_dict=linear_classifier,
-        optimizer=optimizer,
-        scheduler=scheduler,
-    )
-    start_epoch = to_restore["epoch"]
-    best_acc = to_restore["best_acc"]
-
-    best_state = None
-    best_score = 0
-    best_preds = None
-
-    patience = 20
-
-    
-
-    for epoch in range(start_epoch, args.epochs):
-        train_loader.sampler.set_epoch(epoch)
-
-        train_stats = train(model, linear_classifier, optimizer, train_loader, epoch, args.n_last_blocks, args.avgpool_patchtokens)
-        scheduler.step()
-
-        log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
-                     'epoch': epoch}
-        if epoch % args.val_freq == 0 or epoch == args.epochs - 1:
-            test_stats,preds,valid_labels = validate_network(val_loader, model, linear_classifier, args.n_last_blocks, args.avgpool_patchtokens)
-            print(f"Accuracy at epoch {epoch} of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
-            best_acc = max(best_acc, test_stats["acc1"])
-            print(f'Max accuracy so far: {best_acc:.2f}%')
-            log_stats = {**{k: v for k, v in log_stats.items()},
-                         **{f'test_{k}': v for k, v in test_stats.items()}}
-            one_hot_label = np.eye(9)[valid_labels.astype(np.int64)]
-            pr_auc = 0
-            for i in range(9):
-                label_ = one_hot_label[:,i]
-                pred_ = preds[:,i]
-                precision, recall, thresholds = metrics.precision_recall_curve(label_, pred_)
-                pr_auc += metrics.auc(recall, precision)/9
-            if pr_auc>best_score:#pr_auc best
-                best_score = pr_auc
-                patience =20
-                best_preds = preds
-                torch.save(linear_classifier.state_dict(), os.path.join(args.output_dir,"linear_w.pth"))
-            else:
-                patience -=1
-        if utils.is_main_process():
-            with (Path(args.output_dir) / "log.txt").open("a") as f:
-                f.write(json.dumps(log_stats)+ f"best pr_auc:{best_score}"+ "\n")
-            save_dict = {
-                "epoch": epoch + 1,
-                "state_dict": linear_classifier.state_dict(),
-                "optimizer": optimizer.state_dict(),
-                "scheduler": scheduler.state_dict(),
-                "best pr_auc":best_score,
-                "best_acc": best_acc,
-            }
-            torch.save(save_dict, os.path.join(args.output_dir, "checkpoint.pth.tar"))
-
-        if patience==0:
-            exit()
-    print("Training of the supervised linear classifier on frozen features completed.\n"
-                "Top-1 test accuracy: {acc:.1f}".format(acc=best_acc))
-
-    """
-
-
-    #embeds = validate_network_(val_loader, model, linear_classifier, args.n_last_blocks, args.avgpool_patchtokens)
-    
-    #np.save(os.path.join(args.output_dir,"folds_embed_300e_vits.npy"),embeds)
-
     embeds = validate_network_(test_loader, model, linear_classifier, args.n_last_blocks, args.avgpool_patchtokens)
 
-    np.save(os.path.join(args.output_dir,"exp002__embed_300e_vits.npy"),embeds)
-
-def train(model, linear_classifier, optimizer, loader, epoch, n, avgpool):
-    linear_classifier.train()
-    metric_logger = utils.MetricLogger(delimiter=" ")
-    metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    header = 'Epoch: [{}]'.format(epoch)
-    for (inp, target) in metric_logger.log_every(loader, 20, header):
-        # move to gpu
-        inp = inp.cuda(non_blocking=True)
-        target = target.cuda(non_blocking=True)
-
-        # forward
-        with torch.no_grad():
-            if "vit" in args.arch:
-                intermediate_output = model.get_intermediate_layers(inp, n)
-                output = torch.cat([x[:, 0] for x in intermediate_output], dim=-1)
-                if avgpool:
-                    output = torch.cat((output.unsqueeze(-1), torch.mean(intermediate_output[-1][:, 1:], dim=1).unsqueeze(-1)), dim=-1)
-                    output = output.reshape(output.shape[0], -1)
-            else:
-                output = model(inp)
-        output = linear_classifier(output)
-
-        # compute cross entropy loss
-        loss = nn.CrossEntropyLoss()(output, target)
-
-        # compute the gradients
-        optimizer.zero_grad()
-        loss.backward()
-
-        # step
-        optimizer.step()
-
-        # log 
-        torch.cuda.synchronize()
-        metric_logger.update(loss=loss.item())
-        metric_logger.update(lr=optimizer.param_groups[0]["lr"])
-    # gather the stats from all processes
-    metric_logger.synchronize_between_processes()
-    print("Averaged stats:", metric_logger)
-    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+    np.save(os.path.join(args.output_dir,"embed_300e_DINO_ViT-S.npy"),embeds)
+    X_reduced = TSNE(n_components=2, random_state=2000,perplexity=10).fit_transform(embeds)
+    np.save(os.path.join(args.output_dir,"embed_300e_DINO_ViT-S_TSNE.npy"),X_reduced)
 
 
 @torch.no_grad()
