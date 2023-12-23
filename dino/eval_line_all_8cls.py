@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 import argparse
 import json
 from pathlib import Path
@@ -109,12 +109,8 @@ def eval_linear(args):
     
     df = pd.read_csv("/home/abe/kuma-ssl/data/folds8.csv")
     tra_df = df[df["fold"]!=FOLD].reset_index(drop=True)
-    ###
-    #tra_df = tra_df.sample(frac=0.1,random_state=2022).reset_index(drop=True)
-    tra_df = tra_df.sample(frac=1,random_state=1000).reset_index(drop=True)
-    ###
+
     val_df = df[df["fold"]==FOLD].reset_index(drop=True)
-    #dataset_val = datasets.ImageFolder(os.path.join(args.data_path, "val"), transform=val_transform)
     dataset_val = TrainDataset(val_df, transform=val_transform)
     val_loader = torch.utils.data.DataLoader(
         dataset_val,
@@ -390,10 +386,44 @@ if __name__ == '__main__':
     parser.add_argument('--num_labels', default=8, type=int, help='Number of labels for linear classifier')
     parser.add_argument('--evaluate', dest='evaluate', action='store_true', help='evaluate model on validation set')
     args = parser.parse_args()
-    args.output_dir = os.path.join(args.output_dir,str(args.fold))
-    if args.output_dir:
-        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    ROOT = args.output_dir 
+    
+    args.fold = 0
+    args.output_dir = ROOT+str(args.fold)    
+    os.makedirs(args.output_dir,exist_ok=True)
+    eval_linear(args)
+    args.fold = 1
+    args.output_dir =ROOT+str(args.fold)
+    os.makedirs(args.output_dir,exist_ok=True)
+    eval_linear(args)
+    args.fold = 2
+    args.output_dir = ROOT+str(args.fold)
+    os.makedirs(args.output_dir,exist_ok=True)
+    eval_linear(args)
+    args.fold = 3
+    args.output_dir =ROOT+str(args.fold)
+    os.makedirs(args.output_dir,exist_ok=True)
+    eval_linear(args)
+    args.fold = 4
+    args.output_dir =ROOT+str(args.fold)
+    os.makedirs(args.output_dir,exist_ok=True)
     eval_linear(args)
     
-#/home/abe/.cache/huggingface/hub/models--microsoft--BiomedCLIP-PubMedBERT_256-vit_base_patch16_224/snapshots/e8cf242e76ffa75b1a525099851ea3ff5705809e
 
+    cols = [f"pred_{i}" for i in range(args.num_labels)]
+    sub_pred_ = []
+    oof_ = []
+    for fold in [0,1,2,3,4]:
+    
+        sub = pd.read_csv(os.path.join(ROOT+str(fold),f"sub_fold{fold}_dino.csv"))
+        print(sub[cols].to_numpy().shape)
+        sub_pred_.append(sub[cols].to_numpy())
+        oof_.append(pd.read_csv(os.path.join(ROOT+str(fold),f"oof_fold{fold}_dino.csv")))
+    sub_pred_ = np.mean(np.stack(sub_pred_),axis=0)
+    oof_ = pd.concat(oof_,axis=0)
+    oof_.to_csv(f"{ROOT}oof.csv",index=False)
+    
+    for i in range(args.num_labels):
+        col = f"pred_mean_{i}"
+        sub[col]=sub_pred_[:,i]
+    sub.to_csv(f"{ROOT}sub.csv",index=False)
