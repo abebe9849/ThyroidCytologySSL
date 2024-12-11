@@ -5,6 +5,8 @@
 - **Operating system**: Testing has been performed on Ubuntu 20.04.
 - Python == 3.9
 - PyTorch == 1.12.0
+- sklearn == 1.1.1
+- LightGBM == 3.3.2
 
 ## Pretrained Models
 The checkpoint and loss logs for the DINO pre-trained model are located [here](https://www.kaggle.com/datasets/abebe9849/kumadinoe300s). 
