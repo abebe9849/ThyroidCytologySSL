@@ -1,6 +1,10 @@
 # ThyroidCytologySSL
 
 
+## figure
+The raw data and source files for all figures can be accessed via the following　[figshare](https://doi.org/10.6084/m9.figshare.32400414
+)
+
 ## Requirements
 - **Operating system**: Testing has been performed on Ubuntu 20.04.
 - Python == 3.9
